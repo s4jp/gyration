@@ -4,8 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include <iostream>
 #include <vector>
@@ -47,7 +47,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(width, height, "Name", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(width, height, "Gyration", NULL, NULL);
     if (window == NULL) {
       std::cout << "Failed to create GLFW window" << std::endl;
       glfwTerminate();
@@ -59,10 +59,10 @@ int main() {
     glViewport(0, 0, width - guiWidth, height);
     glEnable(GL_DEPTH_TEST);
 
-    //GLFWimage icon;
-    //icon.pixels = stbi_load("icon.png", &icon.width, &icon.height, 0, 4);
-    //glfwSetWindowIcon(window, 1, &icon);
-    //stbi_image_free(icon.pixels);
+    GLFWimage icon;
+    icon.pixels = stbi_load("icon.png", &icon.width, &icon.height, 0, 4);
+    glfwSetWindowIcon(window, 1, &icon);
+    stbi_image_free(icon.pixels);
     #pragma endregion
 
     // shaders and uniforms
