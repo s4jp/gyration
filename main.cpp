@@ -1,4 +1,4 @@
-#define _USE_MATH_DEFINES
+﻿#define _USE_MATH_DEFINES
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -21,6 +21,9 @@
 #include "EBO.h"
 #include "Camera.h"
 
+#include "ControlledInputFloat.h"
+#include "ControlledInputInt.h"
+
 const float near = 0.1f;
 const float far = 100.0f;
 
@@ -28,6 +31,20 @@ Camera *camera;
 
 glm::mat4 view;
 glm::mat4 proj;
+
+bool running = false;
+ControlledInputFloat edgeLength("Edge Length", 1.0f, 0.1f, 0.1f);
+ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
+ControlledInputFloat deviation("Deviation", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat integrationStep("Int. Step", 0.001f, 0.0001f, 0.0001f);
+ControlledInputInt pathLength("Path Length", 5000, 10, 1);
+bool showCube = true;
+bool showDiagonal = true;
+bool showPath = true;
+bool showGravity = true;
+bool gravity = true;
+static float color[3] = { 0.f, 0.f, 1.f };
 
 void window_size_callback(GLFWwindow *window, int width, int height);
 
@@ -88,9 +105,9 @@ int main() {
     ImGui_ImplOpenGL3_Init("#version 460");
     #pragma endregion
 
-    while (!glfwWindowShouldClose(window)) 
+    while (!glfwWindowShouldClose(window))
     {
-        #pragma region init
+#pragma region init
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -99,8 +116,11 @@ int main() {
         ImGui::NewFrame();
         ImGui::SetNextWindowSize(ImVec2(camera->guiWidth, camera->GetHeight()));
         ImGui::SetNextWindowPos(ImVec2(camera->GetWidth(), 0));
-        #pragma endregion
-        
+#pragma endregion
+
+        camera->HandleInputs(window);
+        camera->PrepareMatrices(view, proj);
+
         // render non-grayscaleable objects
         shaderProgram.Activate();
 
@@ -110,9 +130,47 @@ int main() {
 
 
         // imgui rendering
-        if (ImGui::Begin("Menu", 0,
+        ImGui::Begin("Menu", 0,
             ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {}
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        if (running) {
+            if (ImGui::Button("Stop simulation", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                running = false;
+                // TODO: stop the simulation
+            }
+        }
+        else {
+            if (ImGui::Button("Start simulation", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                running = true;
+                // TODO: start the simulation
+            }
+        }
+
+        ImGui::SeparatorText("Initial conditions");
+        edgeLength.render();
+        // TODO: recalculate inertia tensor upon change
+		density.render();
+		// TODO: recalculate inertia tensor upon change
+		deviation.render();
+		angularVelocity.render();
+		integrationStep.render();
+        if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+			// TODO: apply changes
+        }
+
+		ImGui::SeparatorText("Visualization");
+		pathLength.render();
+        ImGui::Checkbox("Show cube", &showCube);
+        ImGui::SameLine(std::max(ImGui::GetWindowWidth() / 2.f, ImGui::CalcTextSize("Show cube").x));
+		ImGui::Checkbox("Show diagonal", &showDiagonal);
+		ImGui::Checkbox("Show path", &showPath);
+        ImGui::SameLine(std::max(ImGui::GetWindowWidth() / 2.f, ImGui::CalcTextSize("Show path").x));
+		ImGui::Checkbox("Show gravity", &showGravity);
+
+        ImGui::SeparatorText("Other");
+		ImGui::Checkbox("Gravity", &gravity);
+		ImGui::ColorEdit3("Cube color", color);
 
         ImGui::End();
         #pragma region rest
