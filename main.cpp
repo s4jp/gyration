@@ -24,12 +24,14 @@
 #include "ControlledInputFloat.h"
 #include "ControlledInputInt.h"
 #include "Axis.h"
+#include "Cube.h"
 
 const float near = 0.1f;
 const float far = 10000.0f;
 
 Camera *camera;
 Axis* axis;
+Cube* cube;
 
 glm::mat4 view;
 glm::mat4 proj;
@@ -46,7 +48,7 @@ bool showDiagonal = true;
 bool showPath = true;
 bool showGravity = true;
 bool gravity = true;
-static float color[3] = { 0.f, 0.f, 1.f };
+static float color[4] = { 0.f, 0.f, 1.f, 0.4f };
 
 void window_size_callback(GLFWwindow *window, int width, int height);
 
@@ -56,7 +58,7 @@ int main() {
     // initial values
     int width = 1500;
     int height = 800;
-    glm::vec3 cameraPosition = glm::vec3(3.0f, 3.0f, 3.0f);
+    glm::vec3 cameraPosition = glm::vec3(2.0f, 2.0f, 2.0f);
     float fov = M_PI / 4.0f;
     int guiWidth = 300;
 
@@ -76,7 +78,11 @@ int main() {
 
     gladLoadGL();
     glViewport(0, 0, width - guiWidth, height);
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     GLFWimage icon;
     icon.pixels = stbi_load("icon.png", &icon.width, &icon.height, 0, 4);
@@ -97,6 +103,7 @@ int main() {
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
+	cube = new Cube(edgeLength.value);
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -112,7 +119,7 @@ int main() {
     {
 #pragma region init
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -132,6 +139,13 @@ int main() {
 
         // render
 		axis->Render(colorLoc, modelLoc);
+		if (showCube) {
+            glUniform4fv(colorLoc, 1, color);
+			cube->Render(colorLoc, modelLoc);
+		}
+		if (showDiagonal) {
+			cube->RenderDiagonal(colorLoc, modelLoc);
+		}
 
         // imgui rendering
         ImGui::Begin("Menu", 0,
@@ -160,6 +174,7 @@ int main() {
 		angularVelocity.render();
 		integrationStep.render();
         if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+            cube->SetScale(glm::vec3(edgeLength.value / 2.f));
 			// TODO: apply changes
         }
 

@@ -12,6 +12,7 @@
 class Figure
 {
 private:
+  glm::vec3 scale;
   glm::vec3 center;
 
 protected:
@@ -33,34 +34,43 @@ public:
     ebo.Delete();
   }
 
-  void CalculateModelMatrix() {
-    model = CAD::translate(glm::mat4(1.0f), GetPosition());
+  void virtual CalculateModelMatrix() {
+      glm::mat4 translateM =
+          CAD::translate(glm::mat4(1.0f), GetPosition());
+      glm::mat4 scaleM = CAD::scaling(glm::mat4(1.0f), GetScale());
+
+      model = translateM * scaleM;
   }
 
   Figure(std::tuple<std::vector<GLfloat>, std::vector<GLuint>> data, std::string type, glm::vec3 center) {
-    this->center = center;
-    indices_count = std::get<1>(data).size();
-    model = glm::mat4(1.0f);
+      scale = glm::vec3(1.0f);
+      this->center = center;
+      indices_count = std::get<1>(data).size();
+      model = glm::mat4(1.0f);
 
-    vao.Bind();
-    vbo = VBO(std::get<0>(data).data(), std::get<0>(data).size() * sizeof(GLfloat));
-    ebo = EBO(std::get<1>(data).data(), std::get<1>(data).size() * sizeof(GLint));
+      vao.Bind();
+      vbo = VBO(std::get<0>(data).data(), std::get<0>(data).size() * sizeof(GLfloat));
+      ebo = EBO(std::get<1>(data).data(), std::get<1>(data).size() * sizeof(GLint));
 
-    vao.LinkAttrib(vbo, 0, 3, GL_FLOAT, 0, (void *)0);
-    vao.Unbind();
-    vbo.Unbind();
-    ebo.Unbind();
+      vao.LinkAttrib(vbo, 0, 3, GL_FLOAT, 0, (void *)0);
+      vao.Unbind();
+      vbo.Unbind();
+      ebo.Unbind();
 
-    name = type;
+      name = type;
 
-    CalculateModelMatrix();
+      CalculateModelMatrix();
   }
-
+  glm::vec3 GetScale() const { return scale; }
   glm::vec3 GetPosition() const { return center; }
 
+  void SetScale(glm::vec3 nScale) {
+      scale = nScale;
+      CalculateModelMatrix();
+  }
   void SetPosition(glm::vec3 nPosition) {
-    center = nPosition;
-    CalculateModelMatrix();
+      center = nPosition;
+      CalculateModelMatrix();
   }
 
   void RefreshBuffers(std::tuple<std::vector<GLfloat>, std::vector<GLuint>> data) {
