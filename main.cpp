@@ -23,11 +23,13 @@
 
 #include "ControlledInputFloat.h"
 #include "ControlledInputInt.h"
+#include "Axis.h"
 
 const float near = 0.1f;
-const float far = 100.0f;
+const float far = 10000.0f;
 
 Camera *camera;
+Axis* axis;
 
 glm::mat4 view;
 glm::mat4 proj;
@@ -94,6 +96,7 @@ int main() {
 
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
+	axis = new Axis();
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -126,8 +129,9 @@ int main() {
 
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-        // render
 
+        // render
+		axis->Render(colorLoc, modelLoc);
 
         // imgui rendering
         ImGui::Begin("Menu", 0,
