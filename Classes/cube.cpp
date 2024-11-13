@@ -2,10 +2,12 @@
 #include <glm/gtc/type_ptr.hpp>
 
 static float yellow[4] = { 1.f, 1.f, 0.f, 0.5f };
+static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
 
-Cube::Cube(float edgeLength) : Figure(Calculate(), "Cube", glm::vec3(0.f)) 
+Cube::Cube(float edgeLength, float deviation) : Figure(Calculate(), "Cube", glm::vec3(0.f)) 
 {
 	SetScale(glm::vec3(edgeLength / 2.f));
+	SetDeviation(deviation);
 }
 
 std::tuple<std::vector<GLfloat>, std::vector<GLuint>> Cube::Calculate() const
@@ -54,4 +56,11 @@ void Cube::RenderDiagonal(int colorLoc, int modelLoc)
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(GLuint) * (indices_count - 2)));
 
 	vao.Unbind();
+}
+
+void Cube::SetDeviation(float deviation)
+{
+	float angle = glm::radians(deviation);
+	glm::vec3 newDiagonal = glm::normalize(glm::vec3(glm::cos(angle + M_PI_2), glm::sin(angle + M_PI_2), 0.f));
+	SetRotation(glm::rotation(baseDiagonal, newDiagonal));
 }

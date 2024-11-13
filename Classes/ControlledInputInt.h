@@ -5,7 +5,7 @@
 
 class ControlledInputInt {
 public:
-	ControlledInputInt(std::string label, int value, int step = 1, int lowerBound = INT32_MIN, int upperBound = INT32_MAX) {
+	ControlledInputInt(std::string label, int value, int step = 1, int lowerBound = -INT32_MAX, int upperBound = INT32_MAX) {
 		this->label = label;
 		this->value = value;
 		this->step = step;
@@ -13,7 +13,7 @@ public:
 		this->upperBound = upperBound;
 	}
 
-	bool render() {
+	bool Render() {
 		bool change = false;
 		if (ImGui::InputInt(label.c_str(), &value, step, step * 10))
 		{
@@ -28,6 +28,11 @@ public:
 		return change;
 	}
 
+	float GetValue() const {
+		return value;
+	}
+
+private:
 	std::string label;
 	int value;
 	int step;

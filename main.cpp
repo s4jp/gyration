@@ -39,7 +39,7 @@ glm::mat4 proj;
 bool running = false;
 ControlledInputFloat edgeLength("Edge Length", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
-ControlledInputFloat deviation("Deviation", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
 ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
 ControlledInputFloat integrationStep("Int. Step", 0.001f, 0.0001f, 0.0001f);
 ControlledInputInt pathLength("Path Length", 5000, 10, 1);
@@ -103,7 +103,7 @@ int main() {
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
-	cube = new Cube(edgeLength.value);
+	cube = new Cube(edgeLength.GetValue(), deviation.GetValue());
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -166,20 +166,21 @@ int main() {
         }
 
         ImGui::SeparatorText("Initial conditions");
-        edgeLength.render();
+        edgeLength.Render();
         // TODO: recalculate inertia tensor upon change
-		density.render();
+		density.Render();
 		// TODO: recalculate inertia tensor upon change
-		deviation.render();
-		angularVelocity.render();
-		integrationStep.render();
+		deviation.Render();
+		angularVelocity.Render();
+		integrationStep.Render();
         if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-            cube->SetScale(glm::vec3(edgeLength.value / 2.f));
+            cube->SetScale(glm::vec3(edgeLength.GetValue() / 2.f));
+			cube->SetDeviation(deviation.GetValue());
 			// TODO: apply changes
         }
 
 		ImGui::SeparatorText("Visualization");
-		pathLength.render();
+		pathLength.Render();
         ImGui::Checkbox("Show cube", &showCube);
         ImGui::SameLine(std::max(ImGui::GetWindowWidth() / 2.f, ImGui::CalcTextSize("Show cube").x));
 		ImGui::Checkbox("Show diagonal", &showDiagonal);
@@ -206,6 +207,8 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
     shaderProgram.Delete();
+	axis->Delete();
+	cube->Delete();
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

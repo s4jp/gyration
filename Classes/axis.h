@@ -3,7 +3,7 @@
 
 class Axis : public Figure {
 public:
-	Axis(float length = 5000, float width = 2.5f);
+	Axis(float length = 5000, float width = 1.5f);
 
 	void Render(int colorLoc, int modelLoc) override;
 

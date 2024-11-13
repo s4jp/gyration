@@ -43,7 +43,7 @@ static std::string calculateFormat(float num) {
 
 class ControlledInputFloat {
 public:
-	ControlledInputFloat(std::string label, float value, float step = 0.1f, float lowerBound = FLT_MIN, float upperBound = FLT_MAX) {
+	ControlledInputFloat(std::string label, float value, float step = 0.1f, float lowerBound = -FLT_MAX, float upperBound = FLT_MAX) {
 		this->label = label;
 		this->value = value;
 		this->step = step;
@@ -52,7 +52,7 @@ public:
 		this->upperBound = upperBound;
 	}
 
-	bool render() {
+	bool Render() {
 		bool change = false;
 		if (ImGui::InputFloat(label.c_str(), &value, step, step * 10, format.c_str()))
 		{
@@ -67,6 +67,11 @@ public:
 		return change;
 	}
 
+	float GetValue() const {
+		return value;
+	}
+
+private:
 	std::string label;
 	float value;
 	float step;
