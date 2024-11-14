@@ -36,6 +36,7 @@ struct SymMemory {
 	SymParams params;
 	glm::quat Q;
 	glm::vec3 W;
+	float time;
 	std::mutex mutex;
 	std::atomic<bool> stopThread;
 	std::atomic<float> sleep_debt;
@@ -44,6 +45,7 @@ struct SymMemory {
 	{
 		stopThread = false;
 		sleep_debt = 0.0f;
+		time = 0.0f;
 
 		params = SymParams(size, density, deviation, angularVelocity, dt, gravity);
 
@@ -106,19 +108,30 @@ void calculationThread(SymMemory* memory)
 
 		memory->mutex.lock();
 
+			float dt = memory->params.dt / 1000.f;
+			memory->time += dt;
+
 			auto func = [&](const glm::vec3& W, const glm::quat& Q) {
 				glm::vec3 dW_dt = GetWt(W, memory->params.size, memory->params.density, memory->params.gravity, memory->Q);
 				glm::quat dQ_dt = GetQt(Q, W);
 				return std::make_pair(dW_dt, dQ_dt);
 				};
 
-			auto [k1_W, k1_Q] = func(memory->W, memory->Q);
-			auto [k2_W, k2_Q] = func(memory->W + 0.5f * memory->params.dt * k1_W, memory->Q + 0.5f * memory->params.dt * k1_Q);
-			auto [k3_W, k3_Q] = func(memory->W + 0.5f * memory->params.dt * k2_W, memory->Q + 0.5f * memory->params.dt * k2_Q);
-			auto [k4_W, k4_Q] = func(memory->W + memory->params.dt * k3_W, memory->Q + memory->params.dt * k3_Q);
+			//auto [k1_W, k1_Q] = func(memory->W, memory->Q);
+			//auto [k2_W, k2_Q] = func(memory->W + 0.5f * dt * k1_W, memory->Q + 0.5f * dt * k1_Q);
+			//auto [k3_W, k3_Q] = func(memory->W + 0.5f * dt * k2_W, memory->Q + 0.5f * dt * k2_Q);
+			//auto [k4_W, k4_Q] = func(memory->W + dt * k3_W, memory->Q + dt * k3_Q);
 
-			memory->W += (memory->params.dt / 6.0f) * (k1_W + 2.0f * k2_W + 2.0f * k3_W + k4_W);
-			memory->Q += (memory->params.dt / 6.0f) * (k1_Q + 2.0f * k2_Q + 2.0f * k3_Q + k4_Q);
+			auto [k1_W, k1_Q] = func(memory->W, memory->Q);
+			glm::vec3 W_k2 = memory->W + 0.5f * dt * k1_W;
+			auto [k2_W, k2_Q] = func(W_k2, memory->Q + 0.5f * dt * k1_Q);
+			glm::vec3 W_k3 = memory->W + 0.5f * dt * k2_W;
+			auto [k3_W, k3_Q] = func(W_k3, memory->Q + 0.5f * dt * k2_Q);
+			glm::vec3 W_k4 = memory->W + dt * k3_W;
+			auto [k4_W, k4_Q] = func(W_k4, memory->Q + dt * k3_Q);
+
+			memory->W += (dt / 6.0f) * (k1_W + 2.0f * k2_W + 2.0f * k3_W + k4_W);
+			memory->Q += (dt / 6.0f) * (k1_Q + 2.0f * k2_Q + 2.0f * k3_Q + k4_Q);
 
 			memory->Q = glm::normalize(memory->Q);
 
@@ -126,7 +139,7 @@ void calculationThread(SymMemory* memory)
 
 		calc_end = std::chrono::high_resolution_clock::now();
 
-		float time2sleep = memory->params.dt * 1000000000.f - std::chrono::duration_cast<std::chrono::nanoseconds>(calc_end - calc_start).count() - memory->sleep_debt;
+		float time2sleep = memory->params.dt * 1000000.f - std::chrono::duration_cast<std::chrono::nanoseconds>(calc_end - calc_start).count() - memory->sleep_debt;
 
 		wait_start = std::chrono::high_resolution_clock::now();
 

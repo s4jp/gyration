@@ -46,7 +46,7 @@ ControlledInputFloat edgeLength("Edge Length", 2.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
 ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
-ControlledInputFloat integrationStep("Int. Step", 0.0001f, 0.0001f, 0.0001f);
+ControlledInputFloat integrationStep("Step (ms)", 1.f, 0.1f, 0.1f);
 ControlledInputInt pathLength("Path Length", 1000, 10, 1);
 bool showCube = true;
 bool showDiagonal = true;
@@ -54,6 +54,9 @@ bool showPath = true;
 bool showGravity = true;
 bool gravity = true;
 static float color[4] = { 0.f, 0.f, 1.f, 0.4f };
+
+std::chrono::high_resolution_clock::time_point realTime;
+float simulationTime = 0;
 
 void window_size_callback(GLFWwindow *window, int width, int height);
 
@@ -63,7 +66,7 @@ int main() {
     // initial values
     int width = 1500;
     int height = 800;
-    glm::vec3 cameraPosition = glm::vec3(2.0f, 2.0f, 2.0f);
+    glm::vec3 cameraPosition = glm::vec3(3.0f, 3.0f, 3.0f);
     float fov = M_PI / 4.0f;
     int guiWidth = 300;
 
@@ -127,11 +130,12 @@ int main() {
     #pragma endregion
 
 	calcThread = std::thread(calculationThread, &symMemory);
+    realTime = std::chrono::high_resolution_clock::now();
     glm::quat Q;
 
     while (!glfwWindowShouldClose(window))
     {
-#pragma region init
+        #pragma region init
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -140,13 +144,14 @@ int main() {
         ImGui::NewFrame();
         ImGui::SetNextWindowSize(ImVec2(camera->guiWidth, camera->GetHeight()));
         ImGui::SetNextWindowPos(ImVec2(camera->GetWidth(), 0));
-#pragma endregion
+        #pragma endregion
 
         camera->HandleInputs(window);
         camera->PrepareMatrices(view, proj);
 
 		symMemory.mutex.lock();
 		    Q = symMemory.Q;
+            simulationTime = symMemory.time;
 		symMemory.mutex.unlock();
 		cube->SetQ(Q);
         path->AddPoint(cube->GetSamplePoint());
@@ -180,7 +185,9 @@ int main() {
         // imgui rendering
         ImGui::Begin("Menu", 0,
             ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+            ImGuiWindowFlags_NoResize | 
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoScrollbar);
 
         if (running) {
             if (ImGui::Button("Stop simulation", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
@@ -227,6 +234,12 @@ int main() {
 
         ImGui::SeparatorText("Other");
 		ImGui::ColorEdit3("Cube color", color);
+
+        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 3 * ImGui::GetTextLineHeightWithSpacing());
+        ImGui::Text(("t_sim = " + std::to_string(simulationTime) + "s").c_str());
+        float real_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - realTime).count() / 1000.f;
+        ImGui::Text(("t_real = " + std::to_string(real_time) + "s").c_str());
+        ImGui::Text(("t_diff = " + std::to_string(-(real_time - simulationTime) / simulationTime * 100) + "%%").c_str());
 
         ImGui::End();
         #pragma region rest
