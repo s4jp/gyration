@@ -24,6 +24,12 @@ void Path::AddPoint(glm::vec3 point)
 	RefreshBuffers({ points, {} });
 }
 
+void Path::Clear()
+{
+	points = {};
+	RefreshBuffers({ points, {} });
+}
+
 void Path::Render(int colorLoc, int modelLoc)
 {
 	vao.Bind();

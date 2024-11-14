@@ -21,33 +21,40 @@ glm::quat GetDeviation(float deviation)
 struct SymParams {
 	float size;
 	float density;
-	float deviation;
-	float angularVelocity;
 	float dt;
-	bool gravity;
 
-	SymParams(float size, float density, float deviation, float angularVelocity, float dt, bool gravity) : 
-		size(size), density(density), deviation(deviation), angularVelocity(angularVelocity), dt(dt), gravity(gravity) {}
-
-	SymParams() : SymParams(1.0f, 1.0f, 15.0f, 45.0f, 0.001f, true) {}
+	SymParams(float size, float density, float dt) : 
+		size(size), density(density), dt(dt) {}
 };
 
 struct SymMemory {
 	SymParams params;
 	glm::quat Q;
 	glm::vec3 W;
+	bool gravity;
 	float time;
 	std::mutex mutex;
 	std::atomic<bool> stopThread;
 	std::atomic<float> sleep_debt;
 
-	SymMemory(float size, float density, float deviation, float angularVelocity, float dt, bool gravity)
+	SymMemory(float size, float density, float deviation, float angularVelocity, float dt, bool gravity) : 
+		params(size, density, dt)
+	{
+		this->gravity = gravity;
+
+		Reset(deviation, angularVelocity);
+	}
+
+	~SymMemory()
+	{
+		stopThread = true;
+	}
+
+	void Reset(float deviation, float angularVelocity)
 	{
 		stopThread = false;
 		sleep_debt = 0.0f;
 		time = 0.0f;
-
-		params = SymParams(size, density, deviation, angularVelocity, dt, gravity);
 
 		Q = glm::angleAxis(glm::radians(deviation), diviationAxis);
 		W = glm::vec3{ angularVelocity, angularVelocity, angularVelocity };
@@ -112,7 +119,7 @@ void calculationThread(SymMemory* memory)
 			memory->time += dt;
 
 			auto func = [&](const glm::vec3& W, const glm::quat& Q) {
-				glm::vec3 dW_dt = GetWt(W, memory->params.size, memory->params.density, memory->params.gravity, memory->Q);
+				glm::vec3 dW_dt = GetWt(W, memory->params.size, memory->params.density, memory->gravity, memory->Q);
 				glm::quat dQ_dt = GetQt(Q, W);
 				return std::make_pair(dW_dt, dQ_dt);
 				};

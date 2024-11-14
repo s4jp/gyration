@@ -44,8 +44,8 @@ glm::mat4 proj;
 bool running = false;
 ControlledInputFloat edgeLength("Edge Length", 2.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
-ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
-ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat deviation("Deviation*", 15.0f, 0.1f);
+ControlledInputFloat angularVelocity("Ang. Vel.*", 10.0f, 0.1f);
 ControlledInputFloat integrationStep("Step (ms)", 1.f, 0.1f, 0.1f);
 ControlledInputInt pathLength("Path Length", 1000, 10, 1);
 bool showCube = true;
@@ -208,20 +208,24 @@ int main() {
 		deviation.Render();
 		angularVelocity.Render();
 		integrationStep.Render();
-        ImGui::Checkbox("Gravity", &gravity);
-        if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+        if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x / 2.f, 0))) 
         {
             cube->SetScale(glm::vec3(edgeLength.GetValue() / 2.f));
 			
 			symMemory.mutex.lock();
 			    symMemory.params.size = edgeLength.GetValue();
 			    symMemory.params.density = density.GetValue();
-			    symMemory.params.deviation = deviation.GetValue();
-			    symMemory.params.angularVelocity = angularVelocity.GetValue();
 			    symMemory.params.dt = integrationStep.GetValue();
-			    symMemory.params.gravity = gravity;
 			symMemory.mutex.unlock();
         }
+		ImGui::SameLine();
+		if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
+			symMemory.mutex.lock();
+			    symMemory.Reset(deviation.GetValue(), angularVelocity.GetValue());
+			symMemory.mutex.unlock();
+			path->Clear();
+		}
 
 		ImGui::SeparatorText("Visualization");
 		pathLength.Render();
@@ -233,6 +237,12 @@ int main() {
 		ImGui::Checkbox("Show gravity", &showGravity);
 
         ImGui::SeparatorText("Other");
+        if (ImGui::Checkbox("Gravity", &gravity)) 
+        {
+			symMemory.mutex.lock();
+			    symMemory.gravity = gravity;
+			symMemory.mutex.unlock();
+        }
 		ImGui::ColorEdit3("Cube color", color);
 
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 3 * ImGui::GetTextLineHeightWithSpacing());
@@ -255,9 +265,17 @@ int main() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
     shaderProgram.Delete();
+
+	symMemory.stopThread = true;
+	calcThread.join();
+
 	axis->Delete();
 	cube->Delete();
+	plane->Delete();
+	path->Delete();
+
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

@@ -6,6 +6,7 @@ public:
 	Path(int* length);
 
 	void AddPoint(glm::vec3 point);
+	void Clear();
 
 	void Render(int colorLoc, int modelLoc) override;
 private:
