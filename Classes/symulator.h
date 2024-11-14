@@ -117,7 +117,10 @@ void calculationThread(SymMemory* memory)
 	std::chrono::high_resolution_clock::time_point calc_start, calc_end, wait_start;
 
 	while (!memory->terminateThread) {
-		while (!memory->running) {}
+		while (!memory->running){
+			// thread::sleep_for because VS compiler on release removes "empty" loops - idiotic behavior on their part
+			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+		}
 
 		calc_start = std::chrono::high_resolution_clock::now();
 

@@ -232,6 +232,9 @@ int main() {
 		{
 			symMemory.Reset(deviation.GetValue(), angularVelocity.GetValue());
 			realTime = std::chrono::high_resolution_clock::now();
+			pauseStartTime = realTime;
+			simulationTime = 0;
+			pauseTime = 0;
 			path->Clear();
 		}
 
