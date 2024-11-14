@@ -11,6 +11,7 @@ public:
 
 	void SetDeviation(float deviation);
 	void CalculateNextStep(float dt);
+	glm::vec3 GetSamplePoint() const;
 
 private:
 	glm::quat Q;

@@ -32,6 +32,10 @@ public:
 		return value;
 	}
 
+	int* GetPointer() {
+		return &value;
+	}
+
 private:
 	std::string label;
 	int value;

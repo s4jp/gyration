@@ -85,7 +85,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Classes\plane.cpp">
-      <Filter>Source Files\assets</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\path.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Classes\plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

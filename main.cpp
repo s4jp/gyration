@@ -26,6 +26,7 @@
 #include "Axis.h"
 #include "Cube.h"
 #include "Plane.h"
+#include "Path.h"
 
 const float near = 0.1f;
 const float far = 10000.0f;
@@ -34,6 +35,7 @@ Camera *camera;
 Axis* axis;
 Cube* cube;
 Plane* plane;
+Path* path;
 
 glm::mat4 view;
 glm::mat4 proj;
@@ -108,6 +110,7 @@ int main() {
 	axis = new Axis();
 	cube = new Cube(edgeLength.GetValue(), deviation.GetValue(), angularVelocity.GetValue(), density.GetValue(), &gravity);
 	plane = new Plane(edgeLength.GetValue() / 2.f);
+	path = new Path(pathLength.GetPointer());
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -137,6 +140,7 @@ int main() {
 
         if (running) {
             cube->CalculateNextStep(integrationStep.GetValue());
+			path->AddPoint(cube->GetSamplePoint());
         }
 
         // render non-grayscaleable objects
@@ -160,6 +164,9 @@ int main() {
 			cube->RenderGravity(colorLoc, modelLoc);
             glUniform1i(gravityLoc, false);
 			plane->Render(colorLoc, modelLoc);
+		}
+		if (showPath) {
+			path->Render(colorLoc, modelLoc);
 		}
 
         // imgui rendering

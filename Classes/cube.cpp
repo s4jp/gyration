@@ -74,6 +74,11 @@ void Cube::CalculateNextStep(float dt)
 	CalculateModelMatrix();
 }
 
+glm::vec3 Cube::GetSamplePoint() const
+{
+	return glm::vec3(model * glm::vec4(1.f));
+}
+
 void Cube::CalculateModelMatrix()
 {
 	Figure::CalculateModelMatrix();

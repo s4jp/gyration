@@ -161,6 +161,7 @@
     <ClCompile Include="Classes\cube.cpp" />
     <ClCompile Include="Classes\EBO.cpp" />
     <ClCompile Include="Classes\helpers.cpp" />
+    <ClCompile Include="Classes\path.cpp" />
     <ClCompile Include="Classes\plane.cpp" />
     <ClCompile Include="Classes\Shader.cpp" />
     <ClCompile Include="Classes\VAO.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="Classes\EBO.h" />
     <ClInclude Include="Classes\figure.h" />
     <ClInclude Include="Classes\helpers.h" />
+    <ClInclude Include="Classes\path.h" />
     <ClInclude Include="Classes\plane.h" />
     <ClInclude Include="Classes\Shader.h" />
     <ClInclude Include="Classes\VAO.h" />
