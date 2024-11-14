@@ -150,6 +150,9 @@ int main() {
 		if (showDiagonal) {
 			cube->RenderDiagonal(colorLoc, modelLoc);
 		}
+		if (showGravity && gravity) {
+			cube->RenderGravity(colorLoc, modelLoc);
+		}
 
         // imgui rendering
         ImGui::Begin("Menu", 0,

@@ -3,6 +3,8 @@
 
 static float yellow[4] = { 1.f, 1.f, 0.f, 0.5f };
 static float white[4] = { 1.f, 1.f, 1.f, 0.5f };
+static float purple[4] = { 1.f, 0.f, 1.f, 0.5f };
+
 static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
 static float GRAVITY = 9.81f;
 
@@ -13,8 +15,9 @@ Cube::Cube(float edgeLength, float deviation, float initAngleVelocity, float den
 	this->density = density;
 	this->gravity = gravity;
 
-	Q = glm::quat(1, 0, 1, 0);
-	//Q = glm::normalize(Q);
+
+	Q = glm::angleAxis(0.f, baseDiagonal);
+	Q = glm::normalize(Q);
 	Q *= GetRotation();
 
 	W = glm::vec3{ initAngleVelocity,initAngleVelocity,initAngleVelocity };
@@ -104,14 +107,20 @@ std::tuple<std::vector<GLfloat>, std::vector<GLuint>> Cube::Calculate() const
 {
 	std::vector<GLfloat> vertices =
 	{
-		0,	0,	0,			// 0
-		1,	0,	0,			// 1
-		1,	1,	0,			// 2
-		0,	1,	0,			// 3
-		0,	0,	1,			// 4
-		1,	0,	1,			// 5
-		1,	1,	1,			// 6
-		0,	1,	1			// 7
+		0,		0,		0,		// 0
+		1,		0,		0,		// 1
+		1,		1,		0,		// 2
+		0,		1,		0,		// 3
+		0,		0,		1,		// 4
+		1,		0,		1,		// 5
+		1,		1,		1,		// 6
+		0,		1,		1,		// 7
+
+		0.5f,	0.5f,	0.5f,	// 8
+		0.5f,	0.5f,	0.5f,	// 9
+		0.5f,	0.5f,	0.5f,	// 10
+		0.5f,	0.5f,	0.5f,	// 11
+		0.5f,	0.5f,	0.5f,	// 12
 	};
 	std::vector<GLuint> indices =
 	{
@@ -126,6 +135,7 @@ std::tuple<std::vector<GLfloat>, std::vector<GLuint>> Cube::Calculate() const
 		1, 5, 6, 2,			// Right wireframe
 		4, 0, 3, 7,			// Left wireframe
 		0, 6, 				// Diagonal
+		8, 9, 10, 11, 12,	// Gravity vector
 	};
 
 	return std::make_tuple(vertices, indices);
@@ -153,7 +163,20 @@ void Cube::RenderDiagonal(int colorLoc, int modelLoc)
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	glUniform4fv(colorLoc, 1, yellow);
+	glLineWidth(1.f);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(sizeof(GLuint) * 52));
+
+	vao.Unbind();
+}
+
+void Cube::RenderGravity(int colorLoc, int modelLoc)
+{
+	vao.Bind();
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	glUniform4fv(colorLoc, 1, purple);
+	glLineWidth(2.f);
+	glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_INT, (void*)(sizeof(GLuint) * 54));
 
 	vao.Unbind();
 }

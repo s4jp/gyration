@@ -7,6 +7,7 @@ public:
 
 	void Render(int colorLoc, int modelLoc) override;
 	void RenderDiagonal(int colorLoc, int modelLoc);
+	void RenderGravity(int colorLoc, int modelLoc);
 
 	void SetDeviation(float deviation);
 	void CalculateNextStep(float dt);
