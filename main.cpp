@@ -27,6 +27,7 @@
 #include "Cube.h"
 #include "Plane.h"
 #include "Path.h"
+#include "symulator.h"
 
 const float near = 0.1f;
 const float far = 10000.0f;
@@ -44,9 +45,9 @@ bool running = false;
 ControlledInputFloat edgeLength("Edge Length", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
-ControlledInputFloat angularVelocity("Ang. Vel.", 45.0f, 0.1f, 0.1f);
-ControlledInputFloat integrationStep("Int. Step", 0.001f, 0.0001f, 0.0001f);
-ControlledInputInt pathLength("Path Length", 5000, 10, 1);
+ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat integrationStep("Int. Step", 0.0001f, 0.0001f, 0.0001f);
+ControlledInputInt pathLength("Path Length", 1000, 10, 1);
 bool showCube = true;
 bool showDiagonal = true;
 bool showPath = true;
@@ -108,9 +109,12 @@ int main() {
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
-	cube = new Cube(edgeLength.GetValue(), deviation.GetValue(), angularVelocity.GetValue(), density.GetValue(), &gravity);
+	cube = new Cube(edgeLength.GetValue(), deviation.GetValue());
 	plane = new Plane(edgeLength.GetValue() / 2.f);
 	path = new Path(pathLength.GetPointer());
+
+	SymMemory symMemory(edgeLength.GetValue(), density.GetValue(), deviation.GetValue(), angularVelocity.GetValue(), integrationStep.GetValue(), gravity);
+    std::thread calcThread;
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -121,6 +125,9 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
     #pragma endregion
+
+	calcThread = std::thread(calculationThread, &symMemory);
+    glm::quat Q;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -138,10 +145,11 @@ int main() {
         camera->HandleInputs(window);
         camera->PrepareMatrices(view, proj);
 
-        if (running) {
-            cube->CalculateNextStep(integrationStep.GetValue());
-			path->AddPoint(cube->GetSamplePoint());
-        }
+		symMemory.mutex.lock();
+		    Q = symMemory.Q;
+		symMemory.mutex.unlock();
+		cube->SetQ(Q);
+        path->AddPoint(cube->GetSamplePoint());
 
         // render non-grayscaleable objects
         shaderProgram.Activate();
@@ -159,7 +167,7 @@ int main() {
 		if (showDiagonal) {
 			cube->RenderDiagonal(colorLoc, modelLoc);
 		}
-		if (showGravity && gravity) {
+		if (showGravity) {
             glUniform1i(gravityLoc, true);
 			cube->RenderGravity(colorLoc, modelLoc);
             glUniform1i(gravityLoc, false);
@@ -189,16 +197,24 @@ int main() {
 
         ImGui::SeparatorText("Initial conditions");
         edgeLength.Render();
-        // TODO: recalculate inertia tensor upon change
 		density.Render();
-		// TODO: recalculate inertia tensor upon change
 		deviation.Render();
 		angularVelocity.Render();
 		integrationStep.Render();
-        if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        ImGui::Checkbox("Gravity", &gravity);
+        if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+        {
             cube->SetScale(glm::vec3(edgeLength.GetValue() / 2.f));
 			cube->SetDeviation(deviation.GetValue());
-			// TODO: apply changes
+			
+			symMemory.mutex.lock();
+			    symMemory.params.size = edgeLength.GetValue();
+			    symMemory.params.density = density.GetValue();
+			    symMemory.params.deviation = deviation.GetValue();
+			    symMemory.params.angularVelocity = angularVelocity.GetValue();
+			    symMemory.params.dt = integrationStep.GetValue();
+			    symMemory.params.gravity = gravity;
+			symMemory.mutex.unlock();
         }
 
 		ImGui::SeparatorText("Visualization");
@@ -211,7 +227,6 @@ int main() {
 		ImGui::Checkbox("Show gravity", &showGravity);
 
         ImGui::SeparatorText("Other");
-		ImGui::Checkbox("Gravity", &gravity);
 		ImGui::ColorEdit3("Cube color", color);
 
         ImGui::End();

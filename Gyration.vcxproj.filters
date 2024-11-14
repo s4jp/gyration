@@ -161,6 +161,9 @@
     <ClInclude Include="Classes\path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Classes\symulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\default.frag">

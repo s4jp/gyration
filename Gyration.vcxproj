@@ -189,6 +189,7 @@
     <ClInclude Include="Classes\path.h" />
     <ClInclude Include="Classes\plane.h" />
     <ClInclude Include="Classes\Shader.h" />
+    <ClInclude Include="Classes\symulator.h" />
     <ClInclude Include="Classes\VAO.h" />
     <ClInclude Include="Classes\VBO.h" />
     <ClInclude Include="imgui\imconfig.h" />
