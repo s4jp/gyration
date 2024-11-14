@@ -40,7 +40,7 @@ bool running = false;
 ControlledInputFloat edgeLength("Edge Length", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
-ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
+ControlledInputFloat angularVelocity("Ang. Vel.", 45.0f, 0.1f, 0.1f);
 ControlledInputFloat integrationStep("Int. Step", 0.001f, 0.0001f, 0.0001f);
 ControlledInputInt pathLength("Path Length", 5000, 10, 1);
 bool showCube = true;
