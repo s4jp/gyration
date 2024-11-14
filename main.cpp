@@ -42,7 +42,7 @@ glm::mat4 view;
 glm::mat4 proj;
 
 bool running = false;
-ControlledInputFloat edgeLength("Edge Length", 1.0f, 0.1f, 0.1f);
+ControlledInputFloat edgeLength("Edge Length", 2.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation", 15.0f, 0.1f);
 ControlledInputFloat angularVelocity("Ang. Vel.", 15.0f, 0.1f, 0.1f);
@@ -109,7 +109,7 @@ int main() {
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
-	cube = new Cube(edgeLength.GetValue(), deviation.GetValue());
+	cube = new Cube(edgeLength.GetValue());
 	plane = new Plane(edgeLength.GetValue() / 2.f);
 	path = new Path(pathLength.GetPointer());
 
@@ -205,7 +205,6 @@ int main() {
         if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
         {
             cube->SetScale(glm::vec3(edgeLength.GetValue() / 2.f));
-			cube->SetDeviation(deviation.GetValue());
 			
 			symMemory.mutex.lock();
 			    symMemory.params.size = edgeLength.GetValue();

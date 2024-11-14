@@ -3,9 +3,8 @@
 
 class Cube : public Figure {
 public:
-	Cube(float edgeLength, float deviation);
+	Cube(float edgeLength);
 
-	void SetDeviation(float deviation);
 	glm::vec3 GetSamplePoint() const;
 	void SetQ(glm::quat Q);
 

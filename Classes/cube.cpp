@@ -5,22 +5,16 @@ static float yellow[4] = { 1.f, 1.f, 0.f, 0.5f };
 static float white[4] = { 1.f, 1.f, 1.f, 0.5f };
 static float purple[4] = { 1.f, 0.f, 1.f, 0.7f };
 
-static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+static glm::vec3 startDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+static glm::vec3 straightDiagonal = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
 static float GRAVITY = 9.81f;
 
-Cube::Cube(float edgeLength, float deviation) : Figure(Calculate(), "Cube", glm::vec3(0.f))
+Cube::Cube(float edgeLength) : Figure(Calculate(), "Cube", glm::vec3(0.f))
 {
 	SetScale(glm::vec3(edgeLength / 2.f));
-	SetDeviation(deviation);
+	SetRotation(glm::rotation(startDiagonal, straightDiagonal));
 
-	Q = glm::quat();
-}
-
-void Cube::SetDeviation(float deviation)
-{
-	float angle = glm::radians(deviation);
-	glm::vec3 newDiagonal = glm::normalize(glm::vec3(glm::cos(angle + M_PI_2), glm::sin(angle + M_PI_2), 0.f));
-	SetRotation(glm::rotation(baseDiagonal, newDiagonal));
+	Q = glm::quat(1,0,0,0);
 }
 
 void Cube::SetQ(glm::quat Q)

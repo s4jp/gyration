@@ -8,6 +8,7 @@
 #include <mutex>
 
 static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+static glm::vec3 diviationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 static float GRAVITY = 9.81f;
 
 glm::quat GetDeviation(float deviation)
@@ -46,10 +47,7 @@ struct SymMemory {
 
 		params = SymParams(size, density, deviation, angularVelocity, dt, gravity);
 
-		Q = glm::angleAxis(0.f, baseDiagonal);
-		Q = glm::normalize(Q);
-		Q *= GetDeviation(deviation);
-
+		Q = glm::angleAxis(glm::radians(deviation), diviationAxis);
 		W = glm::vec3{ angularVelocity, angularVelocity, angularVelocity };
 	}
 };
