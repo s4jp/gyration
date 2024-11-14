@@ -34,27 +34,33 @@ struct SymMemory {
 	bool gravity;
 	float time;
 	std::mutex mutex;
-	std::atomic<bool> stopThread;
+	bool running;
+	std::atomic<bool> terminateThread;
 	std::atomic<float> sleep_debt;
 
 	SymMemory(float size, float density, float deviation, float angularVelocity, float dt, bool gravity) : 
 		params(size, density, dt)
 	{
 		this->gravity = gravity;
+		running = false;
 
 		Reset(deviation, angularVelocity);
 	}
 
 	~SymMemory()
 	{
-		stopThread = true;
+		mutex.lock();
+			terminateThread = true;
+		mutex.unlock();
 	}
 
 	void Reset(float deviation, float angularVelocity)
 	{
-		stopThread = false;
-		sleep_debt = 0.0f;
-		time = 0.0f;
+		mutex.lock();
+			terminateThread = false;
+			sleep_debt = 0.0f;
+			time = 0.0f;
+		mutex.unlock();
 
 		Q = glm::angleAxis(glm::radians(deviation), diviationAxis);
 		W = glm::vec3{ angularVelocity, angularVelocity, angularVelocity };
@@ -110,7 +116,9 @@ void calculationThread(SymMemory* memory)
 {
 	std::chrono::high_resolution_clock::time_point calc_start, calc_end, wait_start;
 
-	while (!memory->stopThread) {
+	while (!memory->terminateThread) {
+		while (!memory->running) {}
+
 		calc_start = std::chrono::high_resolution_clock::now();
 
 		memory->mutex.lock();

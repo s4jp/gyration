@@ -57,6 +57,8 @@ static float color[4] = { 0.f, 0.f, 1.f, 0.4f };
 
 std::chrono::high_resolution_clock::time_point realTime;
 float simulationTime = 0;
+std::chrono::high_resolution_clock::time_point pauseStartTime;
+float pauseTime = 0;
 
 void window_size_callback(GLFWwindow *window, int width, int height);
 
@@ -131,6 +133,7 @@ int main() {
 
 	calcThread = std::thread(calculationThread, &symMemory);
     realTime = std::chrono::high_resolution_clock::now();
+    pauseStartTime = realTime;
     glm::quat Q;
 
     while (!glfwWindowShouldClose(window))
@@ -191,14 +194,20 @@ int main() {
 
         if (running) {
             if (ImGui::Button("Stop simulation", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                running = false;
-                // TODO: stop the simulation
+				running = false;
+				symMemory.mutex.lock();
+				    symMemory.running = running;
+				symMemory.mutex.unlock();
+				pauseStartTime = std::chrono::high_resolution_clock::now();
             }
         }
         else {
             if (ImGui::Button("Start simulation", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 running = true;
-                // TODO: start the simulation
+                symMemory.mutex.lock();
+                    symMemory.running = running;
+                symMemory.mutex.unlock();
+				pauseTime += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - pauseStartTime).count() / 1000.f;
             }
         }
 
@@ -221,9 +230,8 @@ int main() {
 		ImGui::SameLine();
 		if (ImGui::Button("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 		{
-			symMemory.mutex.lock();
-			    symMemory.Reset(deviation.GetValue(), angularVelocity.GetValue());
-			symMemory.mutex.unlock();
+			symMemory.Reset(deviation.GetValue(), angularVelocity.GetValue());
+			realTime = std::chrono::high_resolution_clock::now();
 			path->Clear();
 		}
 
@@ -245,11 +253,13 @@ int main() {
         }
 		ImGui::ColorEdit3("Cube color", color);
 
-        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 3 * ImGui::GetTextLineHeightWithSpacing());
-        ImGui::Text(("t_sim = " + std::to_string(simulationTime) + "s").c_str());
-        float real_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - realTime).count() / 1000.f;
-        ImGui::Text(("t_real = " + std::to_string(real_time) + "s").c_str());
-        ImGui::Text(("t_diff = " + std::to_string(-(real_time - simulationTime) / simulationTime * 100) + "%%").c_str());
+        if (running) {
+            ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 3 * ImGui::GetTextLineHeightWithSpacing());
+            ImGui::Text(("t_sim = " + std::to_string(simulationTime) + "s").c_str());
+            float real_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - realTime).count() / 1000.f - pauseTime;
+            ImGui::Text(("t_real = " + std::to_string(real_time) + "s").c_str());
+            ImGui::Text(("t_diff = " + std::to_string(-(real_time - simulationTime) / simulationTime * 100) + "%%").c_str());
+        }
 
         ImGui::End();
         #pragma region rest
@@ -268,7 +278,7 @@ int main() {
 
     shaderProgram.Delete();
 
-	symMemory.stopThread = true;
+	symMemory.terminateThread = true;
 	calcThread.join();
 
 	axis->Delete();
