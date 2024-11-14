@@ -25,6 +25,7 @@
 #include "ControlledInputInt.h"
 #include "Axis.h"
 #include "Cube.h"
+#include "Plane.h"
 
 const float near = 0.1f;
 const float far = 10000.0f;
@@ -32,6 +33,7 @@ const float far = 10000.0f;
 Camera *camera;
 Axis* axis;
 Cube* cube;
+Plane* plane;
 
 glm::mat4 view;
 glm::mat4 proj;
@@ -52,7 +54,7 @@ static float color[4] = { 0.f, 0.f, 1.f, 0.4f };
 
 void window_size_callback(GLFWwindow *window, int width, int height);
 
-int modelLoc, viewLoc, projLoc, colorLoc;
+int modelLoc, viewLoc, projLoc, colorLoc, gravityLoc;
 
 int main() { 
     // initial values
@@ -96,6 +98,7 @@ int main() {
     viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
     projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
     colorLoc = glGetUniformLocation(shaderProgram.ID, "color");
+	gravityLoc = glGetUniformLocation(shaderProgram.ID, "gravity");
 
     // callbacks
     glfwSetWindowSizeCallback(window, window_size_callback);
@@ -104,6 +107,7 @@ int main() {
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
 	cube = new Cube(edgeLength.GetValue(), deviation.GetValue(), angularVelocity.GetValue(), density.GetValue(), &gravity);
+	plane = new Plane(edgeLength.GetValue() / 2.f);
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -140,6 +144,7 @@ int main() {
 
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		glUniform1i(gravityLoc, false);
 
         // render
 		axis->Render(colorLoc, modelLoc);
@@ -151,7 +156,10 @@ int main() {
 			cube->RenderDiagonal(colorLoc, modelLoc);
 		}
 		if (showGravity && gravity) {
+            glUniform1i(gravityLoc, true);
 			cube->RenderGravity(colorLoc, modelLoc);
+            glUniform1i(gravityLoc, false);
+			plane->Render(colorLoc, modelLoc);
 		}
 
         // imgui rendering

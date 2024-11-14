@@ -3,7 +3,7 @@
 
 static float yellow[4] = { 1.f, 1.f, 0.f, 0.5f };
 static float white[4] = { 1.f, 1.f, 1.f, 0.5f };
-static float purple[4] = { 1.f, 0.f, 1.f, 0.5f };
+static float purple[4] = { 1.f, 0.f, 1.f, 0.7f };
 
 static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
 static float GRAVITY = 9.81f;
