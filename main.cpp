@@ -103,7 +103,7 @@ int main() {
     camera = new Camera(width, height, cameraPosition, fov, near, far, guiWidth);
     camera->PrepareMatrices(view, proj);
 	axis = new Axis();
-	cube = new Cube(edgeLength.GetValue(), deviation.GetValue());
+	cube = new Cube(edgeLength.GetValue(), deviation.GetValue(), angularVelocity.GetValue(), density.GetValue(), &gravity);
 
     #pragma region imgui_boilerplate
     IMGUI_CHECKVERSION();
@@ -130,6 +130,10 @@ int main() {
 
         camera->HandleInputs(window);
         camera->PrepareMatrices(view, proj);
+
+        if (running) {
+            cube->CalculateNextStep(integrationStep.GetValue());
+        }
 
         // render non-grayscaleable objects
         shaderProgram.Activate();

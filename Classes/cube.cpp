@@ -3,11 +3,71 @@
 
 static float yellow[4] = { 1.f, 1.f, 0.f, 0.5f };
 static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+static float GRAVITY = 9.81f;
 
-Cube::Cube(float edgeLength, float deviation) : Figure(Calculate(), "Cube", glm::vec3(0.f)) 
+Cube::Cube(float edgeLength, float deviation, float initAngleVelocity, float density, bool* gravity) : Figure(Calculate(), "Cube", glm::vec3(0.f))
 {
 	SetScale(glm::vec3(edgeLength / 2.f));
 	SetDeviation(deviation);
+	this->density = density;
+	this->gravity = gravity;
+
+	Q = glm::quat(1, 0, 1, 0);
+	//Q = glm::normalize(Q);
+	Q *= GetRotation();
+
+	W = glm::vec3{ initAngleVelocity,initAngleVelocity,initAngleVelocity };
+}
+
+glm::vec3 Cube::GetN() const
+{
+	if (!&gravity)
+		return glm::vec3(0.0f);
+
+	glm::vec3 massCenter = Q * this->GetScale();
+
+	glm::vec3 g = glm::vec3(-1.f);
+	g = glm::normalize(g);
+	g *= GRAVITY;
+
+	glm::vec3 axis = glm::cross(massCenter, g);
+
+	glm::quat n = glm::conjugate(Q) * glm::quat(0, axis.x, axis.y, axis.z) * Q;
+	return glm::vec3(n.x, n.y, n.z);
+}
+
+glm::mat3 Cube::GetInertiaTensor() const
+{
+	glm::mat3 inertiaTensor =
+	{
+		2.f / 3,	-0.25f,		-0.25f,
+		-0.25f,		2.f / 3,	-0.25f,
+		-0.25f,		-0.25f,		2.f / 3
+	};
+
+	float edgeLength = this->GetScale().x * 2.f;
+	float mass = density * edgeLength * edgeLength * edgeLength;
+	return mass * edgeLength * edgeLength * inertiaTensor;
+}
+
+void Cube::CalculateNextStep(float dt)
+{
+	auto func = [&](const glm::vec3& W, const glm::quat& Q) {
+		glm::vec3 dW_dt = GetWt(W);
+		glm::quat dQ_dt = GetQt(Q, W);
+		return std::make_pair(dW_dt, dQ_dt);
+		};
+
+	auto [k1_W, k1_Q] = func(W, Q);
+	auto [k2_W, k2_Q] = func(W + 0.5f * dt * k1_W, Q + 0.5f * dt * k1_Q);
+	auto [k3_W, k3_Q] = func(W + 0.5f * dt * k2_W, Q + 0.5f * dt * k2_Q);
+	auto [k4_W, k4_Q] = func(W + dt * k3_W, Q + dt * k3_Q);
+
+	W += (dt / 6.0f) * (k1_W + 2.0f * k2_W + 2.0f * k3_W + k4_W);
+	Q += (dt / 6.0f) * (k1_Q + 2.0f * k2_Q + 2.0f * k3_Q + k4_Q);
+
+	Q = glm::normalize(Q);
+	CalculateModelMatrix();
 }
 
 std::tuple<std::vector<GLfloat>, std::vector<GLuint>> Cube::Calculate() const
@@ -37,6 +97,12 @@ std::tuple<std::vector<GLfloat>, std::vector<GLuint>> Cube::Calculate() const
 	return std::make_tuple(vertices, indices);
 }
 
+void Cube::CalculateModelMatrix()
+{
+	Figure::CalculateModelMatrix();
+	this->model *= glm::toMat4(Q);
+}
+
 void Cube::Render(int colorLoc, int modelLoc)
 {
 	vao.Bind();
@@ -63,4 +129,18 @@ void Cube::SetDeviation(float deviation)
 	float angle = glm::radians(deviation);
 	glm::vec3 newDiagonal = glm::normalize(glm::vec3(glm::cos(angle + M_PI_2), glm::sin(angle + M_PI_2), 0.f));
 	SetRotation(glm::rotation(baseDiagonal, newDiagonal));
+}
+
+glm::vec3 Cube::GetWt(glm::vec3 W) const {
+	glm::mat3 I = GetInertiaTensor();
+	glm::vec3 N = GetN();
+	glm::vec3 IW = I * W;
+	glm::vec3 dW_dt = glm::inverse(I) * (N + glm::cross(IW, W));
+	return dW_dt;
+}
+
+glm::quat Cube::GetQt(glm::quat Q, glm::vec3 W) const {
+	glm::quat W_quat(0.0f, W.x, W.y, W.z);
+	glm::quat dQ_dt = Q * 0.5f * W_quat;
+	return dQ_dt;
 }
