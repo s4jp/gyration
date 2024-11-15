@@ -78,9 +78,10 @@ glm::vec3 GetN(bool gravity, glm::quat Q, float size)
 	g = glm::normalize(g);
 	g *= GRAVITY;
 
-	glm::vec3 axis = glm::cross(massCenter, g);
+	glm::vec3 torque = glm::cross(massCenter, g);
+	glm::quat n = glm::conjugate(Q) * glm::quat(0, torque);
+	n *= Q;
 
-	glm::quat n = glm::conjugate(Q) * glm::quat(0, axis.x, axis.y, axis.z) * Q;
 	return glm::vec3(n.x, n.y, n.z);
 }
 
