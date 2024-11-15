@@ -42,12 +42,12 @@ glm::mat4 view;
 glm::mat4 proj;
 
 bool running = false;
-ControlledInputFloat edgeLength("Edge Length", 2.0f, 0.1f, 0.1f);
+ControlledInputFloat edgeLength("Edge length", 2.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation*", 15.0f, 0.1f);
-ControlledInputFloat angularVelocity("Ang. Vel.*", 10.0f, 0.1f);
+ControlledInputFloat angularVelocity("An. vel.* (rad/s)", 20.0f, 0.1f);
 ControlledInputFloat integrationStep("Step (ms)", 1.f, 0.01f, 0.01f);
-ControlledInputInt pathLength("Path Length", 1000, 10, 1);
+ControlledInputInt pathLength("Path length", 1000, 10, 1);
 bool showCube = true;
 bool showDiagonal = true;
 bool showPath = true;
@@ -66,11 +66,11 @@ int modelLoc, viewLoc, projLoc, colorLoc, gravityLoc;
 
 int main() { 
     // initial values
-    int width = 1500;
+    int width = 1600;
     int height = 800;
     glm::vec3 cameraPosition = glm::vec3(3.0f, 3.0f, 3.0f);
     float fov = M_PI / 4.0f;
-    int guiWidth = 300;
+    int guiWidth = 380;
 
     #pragma region gl_boilerplate
     glfwInit();
@@ -217,6 +217,7 @@ int main() {
 		deviation.Render();
 		angularVelocity.Render();
 		integrationStep.Render();
+        ImGui::Text("* - reset required");
         if (ImGui::Button("Apply changes", ImVec2(ImGui::GetContentRegionAvail().x / 2.f, 0))) 
         {
             cube->SetScale(glm::vec3(edgeLength.GetValue() / 2.f));

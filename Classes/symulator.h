@@ -63,7 +63,7 @@ struct SymMemory {
 		mutex.unlock();
 
 		Q = glm::angleAxis(glm::radians(deviation), diviationAxis);
-		W = glm::vec3{ angularVelocity, angularVelocity, angularVelocity };
+		W = glm::normalize(glm::vec3(1.f)) * angularVelocity;
 	}
 };
 
@@ -118,8 +118,8 @@ void calculationThread(SymMemory* memory)
 
 	while (!memory->terminateThread) {
 		while (!memory->running){
-			// thread::sleep_for because VS compiler on release removes "empty" loops - idiotic behavior on their part
-			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+			if (memory->terminateThread)
+				return;
 		}
 
 		calc_start = std::chrono::high_resolution_clock::now();
