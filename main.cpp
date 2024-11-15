@@ -46,7 +46,7 @@ ControlledInputFloat edgeLength("Edge Length", 2.0f, 0.1f, 0.1f);
 ControlledInputFloat density("Density", 1.0f, 0.1f, 0.1f);
 ControlledInputFloat deviation("Deviation*", 15.0f, 0.1f);
 ControlledInputFloat angularVelocity("Ang. Vel.*", 10.0f, 0.1f);
-ControlledInputFloat integrationStep("Step (ms)", 1.f, 0.1f, 0.1f);
+ControlledInputFloat integrationStep("Step (ms)", 1.f, 0.01f, 0.01f);
 ControlledInputInt pathLength("Path Length", 1000, 10, 1);
 bool showCube = true;
 bool showDiagonal = true;

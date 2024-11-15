@@ -79,10 +79,9 @@ glm::vec3 GetN(bool gravity, glm::quat Q, float size)
 	g *= GRAVITY;
 
 	glm::vec3 torque = glm::cross(massCenter, g);
-	glm::quat n = glm::conjugate(Q) * glm::quat(0, torque);
-	n *= Q;
+	glm::vec3 n = glm::rotate(glm::conjugate(Q), torque);
 
-	return glm::vec3(n.x, n.y, n.z);
+	return glm::vec3(n);
 }
 
 glm::mat3 GetInertiaTensor(float size, float density)
