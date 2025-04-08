@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <chrono>
 
 static glm::vec3 baseDiagonal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
 static glm::vec3 diviationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
